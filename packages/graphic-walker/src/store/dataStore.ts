@@ -1,6 +1,6 @@
 import { computed, makeAutoObservable, toJS } from 'mobx';
 import { VizSpecStore } from './visualSpecStore';
-import { DataSet, IAnalyticType, IDataSource, IMutField, IRow, ISemanticType } from '../interfaces';
+import { DataSet, IAnalyticType, IComputationFunction, IDataSource, IMutField, IRow, ISemanticType } from '../interfaces';
 import { getComputation } from '../computation/clientComputation';
 import { IStoInfo, IStoInfoV2, IStoInfoV2SchemaUrl } from '../utils/save';
 import { uniqueId } from '../models/utils';
@@ -14,9 +14,12 @@ export class DataStore {
     metaMap: Record<string, string> = {};
     visDict: Record<string, VizSpecStore> = {};
     dataSources: Required<IDataSource>[] = [];
+    provider?: (data: IRow[]) => IComputationFunction;
+
     dsIndex = 0;
 
-    constructor() {
+    constructor(provider?: (data: IRow[]) => IComputationFunction) {
+        this.provider = provider;
         makeAutoObservable(this, {
             dataSource: computed.struct,
         });
@@ -36,7 +39,7 @@ export class DataStore {
     }
 
     get computation() {
-        return this.dataSource?.data ? getComputation(toJS(this.dataSource.data)) : async () => [];
+        return this.dataSource?.data ? (this.provider ?? getComputation)(toJS(this.dataSource.data)) : async () => [];
     }
 
     get visSpecStore() {

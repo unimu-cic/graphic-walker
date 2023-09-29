@@ -15,7 +15,7 @@ function createKeepAliveContext<T, U extends any[]>(create: (...args: U) => T) {
     };
 }
 
-const getCommonStore = createKeepAliveContext(() => new CommonStore());
+const getCommonStore = createKeepAliveContext((provider?: (data: IRow[]) => IComputationFunction) => new CommonStore(provider));
 const getVizStore = createKeepAliveContext(
     (
         meta: IMutField[],
@@ -32,13 +32,14 @@ interface StoreWrapperProps {
     keepAlive?: boolean | string;
     storeRef?: React.MutableRefObject<CommonStore | null>;
     children?: React.ReactNode;
+    computationProvider?: (data: IRow[]) => IComputationFunction;
 }
 
 const noop = () => {};
 
 export const StoreWrapper = (props: StoreWrapperProps) => {
     const storeKey = props.keepAlive ? `${props.keepAlive}` : '';
-    const store = useMemo(() => getCommonStore(storeKey), [storeKey]);
+    const store = useMemo(() => getCommonStore(storeKey, props.computationProvider), [storeKey]);
     useEffect(() => {
         if (props.storeRef) {
             const ref = props.storeRef;

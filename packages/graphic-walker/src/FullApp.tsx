@@ -42,7 +42,7 @@ export const AppContent = observer<Omit<IGWProps, 'storeRef' | 'keepAlive'>>(fun
 
 export const App = observer<IGWProps>(function App(props) {
     return (
-        <StoreWrapper storeRef={props.storeRef} keepAlive={props.keepAlive}>
+        <StoreWrapper storeRef={props.storeRef} keepAlive={props.keepAlive} computationProvider={props.computationProvider}>
             <AppContent {...props} />
         </StoreWrapper>
     );

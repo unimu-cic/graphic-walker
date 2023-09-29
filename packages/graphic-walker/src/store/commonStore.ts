@@ -1,15 +1,16 @@
 import { makeAutoObservable, observable } from 'mobx';
-import { IDataSetInfo, IMutField, IRow } from '../interfaces';
+import { IComputationFunction, IDataSetInfo, IMutField, IRow } from '../interfaces';
 import { transData } from '../dataSource/utils';
 import { DataStore } from './dataStore';
 
 export class CommonStore {
-    public dataStore: DataStore = new DataStore();
+    public dataStore: DataStore;
     public tmpDSName: string = '';
     public tmpDSRawFields: IMutField[] = [];
     public tmpDataSource: IRow[] = [];
     public showDSPanel: boolean = false;
-    constructor () {
+    constructor (provider?: (data: IRow[]) => IComputationFunction) {
+        this.dataStore = new DataStore(provider);
         makeAutoObservable(this, {
             tmpDataSource: observable.ref,
             dataStore: false

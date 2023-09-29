@@ -7,7 +7,7 @@ import {
     IVizProps,
     IErrorHandlerProps,
     IVizAppProps,
-    ISpecProps,
+    ISpecProps, IRow,
     IComputationContextProps,
 } from './interfaces';
 import type { IReactVegaHandler } from './vis/react-vega';
@@ -225,16 +225,17 @@ export const VizApp = observer(function VizApp(props: BaseVizProps) {
 export function VizAppWithContext(props: IVizAppProps) {
     const { computation, safeMetas } = useMemo(() => {
         if (props.dataSource) {
+            const getComp = props.computationProvider ?? getComputation;
             if (props.fieldKeyGuard) {
                 const { safeData, safeMetas } = guardDataKeys(props.dataSource, props.rawFields);
                 return {
                     safeMetas,
-                    computation: getComputation(safeData),
+                    computation: getComp(safeData),
                 };
             }
             return {
                 safeMetas: props.rawFields,
-                computation: getComputation(props.dataSource),
+                computation: getComp(props.dataSource),
             };
         }
         return {

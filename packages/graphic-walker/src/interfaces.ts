@@ -832,6 +832,7 @@ export type IComputationProps = {
            */
           fieldKeyGuard?: boolean;
           dataSource: any[];
+          computationProvider?: (data: IRow[]) => IComputationFunction;
       }
     | {
           fieldKeyGuard?: undefined;
@@ -850,6 +851,7 @@ export type IGWProps = IAppI18nProps &
     IThemeProps &
     IErrorHandlerProps & {
         storeRef?: React.MutableRefObject<CommonStore | null>;
+        computationProvider?: (data: IRow[]) => IComputationFunction;
         keepAlive?: boolean | string;
     };
 
