@@ -89,6 +89,7 @@
     "@vitejs/plugin-react": "^3.1.0",
     "styled-components": "^5.3.6",
     "typescript": "^5.1.6",
+    "@kanaries/duckdb-computation": "^0.0.1",
     "vite": "^4.1.1"
   },
   "peerDependencies": {
