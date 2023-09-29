@@ -6,7 +6,7 @@
   "dependencies": {},
   "devDependencies": {},
   "scripts": {
-    "build": "yarn workspace @kanaries/graphic-walker build"
+    "build": "yarn workspace @kanaries/duckdb-computation build && yarn workspace @kanaries/graphic-walker build"
   },
   "workspaces": {
     "packages": ["packages/*"]
