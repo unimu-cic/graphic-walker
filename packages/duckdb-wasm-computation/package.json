@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "^1.27.0",
-    "@kanaries-temp/gw-dsl-parser": "^0.1.5",
+    "@kanaries-temp/gw-dsl-parser": "^0.1.12",
     "apache-arrow": "^13.0.0",
     "nanoid": "^5.0.1"
   },
