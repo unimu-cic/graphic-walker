@@ -15,6 +15,8 @@ import {
     ICoordMode,
     IGeoUrl,
     ISemanticType,
+    IPaintMap,
+    IExpression,
 } from '../interfaces';
 import type { FeatureCollection } from 'geojson';
 import { createCountField, createVirtualFields } from '../utils';
@@ -23,7 +25,7 @@ import { emptyEncodings, emptyVisualConfig, emptyVisualLayout } from '../utils/s
 import { AssertSameKey, KVTuple, insert, mutPath, remove, replace, uniqueId } from './utils';
 import { WithHistory, atWith, create, freeze, performWith, redoWith, undoWith } from './withHistory';
 import { GLOBAL_CONFIG } from '../config';
-import { DATE_TIME_DRILL_LEVELS, DATE_TIME_FEATURE_LEVELS } from '../constants';
+import { DATE_TIME_DRILL_LEVELS, DATE_TIME_FEATURE_LEVELS, PAINT_FIELD_ID } from '../constants';
 import { algebraLint } from '../lib/gog';
 
 type normalKeys = keyof Omit<DraggableFieldState, 'filters'>;
@@ -49,6 +51,7 @@ export enum Methods {
     createDateDrillField,
     createDateFeatureField,
     changeSemanticType,
+    upsertPaintField,
 }
 type PropsMap = {
     [Methods.setConfig]: KVTuple<IVisualConfigNew>;
@@ -70,6 +73,7 @@ type PropsMap = {
     [Methods.createDateDrillField]: [normalKeys, number, (typeof DATE_TIME_DRILL_LEVELS)[number], string, string, string | undefined];
     [Methods.createDateFeatureField]: [normalKeys, number, (typeof DATE_TIME_FEATURE_LEVELS)[number], string, string, string | undefined];
     [Methods.changeSemanticType]: [normalKeys, number, ISemanticType];
+    [Methods.upsertPaintField]: [IPaintMap, string];
 };
 // ensure propsMap has all keys of methods
 type assertPropsMap = AssertSameKey<PropsMap, { [a in Methods]: any }>;
@@ -271,6 +275,35 @@ const actions: {
     },
     [Methods.changeSemanticType]: (data, channel, index, semanticType) => {
         return mutPath(data, `encodings.${channel}`, (f) => replace(f, index, (x) => ({ ...x, semanticType })));
+    },
+    [Methods.upsertPaintField]: (data, map, name) => {
+        return mutPath(data, `encodings.dimensions`, (f) => {
+            const expression: IExpression = {
+                op: 'paint',
+                as: PAINT_FIELD_ID,
+                params: [{ type: 'map', value: map }],
+            };
+            const i = f.findIndex((x) => x.fid === PAINT_FIELD_ID);
+            if (i > -1) {
+                return replace(f, i, (x) => ({
+                    ...x,
+                    expression,
+                }));
+            }
+            return insert(
+                f,
+                {
+                    fid: PAINT_FIELD_ID,
+                    dragId: PAINT_FIELD_ID,
+                    analyticType: 'dimension',
+                    name,
+                    semanticType: 'nominal',
+                    computed: true,
+                    expression,
+                },
+                f.length
+            );
+        });
     },
 };
 
