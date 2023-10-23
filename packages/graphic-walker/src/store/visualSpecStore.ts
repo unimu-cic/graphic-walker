@@ -241,10 +241,7 @@ export class VizSpecStore {
         if (existPaintField) {
             const param: IPaintMap = existPaintField.expression?.params.find((x) => x.type === 'map')?.value;
             if (param) {
-                return {
-                    x: param.x,
-                    y: param.y,
-                };
+                return param;
             }
         }
         if (!this.currentVis.config.defaultAggregated) {
@@ -258,8 +255,8 @@ export class VizSpecStore {
                 return null;
             }
             return {
-                x: row.fid,
-                y: col.fid,
+                x: col.fid,
+                y: row.fid,
             };
         }
         return null;
@@ -570,6 +567,10 @@ export class VizSpecStore {
 
     changeSemanticType(stateKey: keyof Omit<DraggableFieldState, 'filters'>, index: number, semanticType: ISemanticType) {
         this.visList[this.visIndex] = performers.changeSemanticType(this.visList[this.visIndex], stateKey, index, semanticType);
+    }
+
+    updatePaint(paintMap: IPaintMap, name: string) {
+        this.visList[this.visIndex] = performers.upsertPaintField(this.visList[this.visIndex], paintMap, name);
     }
 
     updateGeoKey(key: string) {
