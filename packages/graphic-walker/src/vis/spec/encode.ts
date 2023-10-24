@@ -1,5 +1,5 @@
 import { DATE_TIME_DRILL_LEVELS } from '../../constants';
-import { IViewField } from '../../interfaces';
+import { IPaintMap, IViewField } from '../../interfaces';
 import { NULL_FIELD } from './field';
 export interface IEncodeProps {
     geomType: string;
@@ -28,7 +28,7 @@ export function availableChannels(geomType: string): Set<string> {
     return new Set(['column', 'opacity', 'color', 'row', 'size', 'x', 'y', 'xOffset', 'yOffset', 'shape']);
 }
 function encodeTimeunit(unit: (typeof DATE_TIME_DRILL_LEVELS)[number]) {
-    switch(unit) {
+    switch (unit) {
         case 'quarter':
             return 'yearquarter';
         case 'month':
@@ -68,16 +68,24 @@ export function channelEncode(props: IEncodeProps) {
                     encoding[c].type = 'quantitative';
                 }
                 if (props[c].semanticType === 'temporal' && props[c].timeUnit) {
-                    encoding[c].timeUnit = encodeTimeunit(props[c].timeUnit)
+                    encoding[c].timeUnit = encodeTimeunit(props[c].timeUnit);
+                }
+                if (c === 'color' && props[c].expression?.op === 'paint') {
+                    const map: IPaintMap = props[c].expression!.params.find((x) => x.type === 'map')!.value;
+                    const colors = map.usedColor.map((x) => map.dict[x]);
+                    encoding[c].scale = {
+                        domain: colors.map((x) => x.name),
+                        range: colors.map((x) => x.color),
+                    };
                 }
             }
         });
     // FIXME: temporal fix, only for x and y relative order
     if (encoding.x) {
-        encoding.x.axis = { labelOverlap: true }
+        encoding.x.axis = { labelOverlap: true };
     }
     if (encoding && encoding.y) {
-        encoding.y.axis = { labelOverlap: true }
+        encoding.y.axis = { labelOverlap: true };
     }
     if (encoding.x && encoding.y) {
         if ((props.x.sort && props.x.sort) || (props.y && props.y.sort)) {
