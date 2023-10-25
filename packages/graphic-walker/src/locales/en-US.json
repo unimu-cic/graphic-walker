@@ -197,6 +197,7 @@
                 },
                 "paint": {
                     "palette": "Palette",
+                    "eraser": "Eraser",
                     "color": "Brush Color",
                     "label": "Brush Label",
                     "brush_size": "Brush Size",
