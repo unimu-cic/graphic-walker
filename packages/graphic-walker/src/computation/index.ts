@@ -12,6 +12,7 @@ import type {
     IVisFilter,
 } from '../interfaces';
 import { getTimeFormat } from '../lib/inferMeta';
+import { processExpression } from '../utils/workflow';
 
 export const datasetStats = async (service: IComputationFunction): Promise<IDatasetStats> => {
     const res = (await service({
@@ -124,7 +125,7 @@ export const fieldStat = async (
                   type: 'transform',
                   transform: [
                       {
-                          expression: field.expression!,
+                          expression: processExpression(field.expression!),
                           key: field.fid,
                       },
                   ],
