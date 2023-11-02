@@ -32,7 +32,7 @@ export async function init() {
   const worker_url = URL.createObjectURL(
     new Blob([`importScripts("${bundle.mainWorker!}");`], {
       type: "text/javascript",
-    })
+    }),
   );
 
   // Instantiate the asynchronus version of DuckDB-Wasm
@@ -48,7 +48,7 @@ export async function init() {
 export async function getComutation(data: Record<string, number>[]) {
   if (data.length === 0) {
     return {
-      close: async () => { },
+      close: async () => {},
       computation: async () => [],
     };
   }
