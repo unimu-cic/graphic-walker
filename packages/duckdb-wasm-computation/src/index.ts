@@ -48,7 +48,7 @@ export async function init() {
 export async function getComutation(data: Record<string, number>[]) {
   if (data.length === 0) {
     return {
-      close: async () => {},
+      close: async () => { },
       computation: async () => [],
     };
   }
