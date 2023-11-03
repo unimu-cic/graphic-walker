@@ -182,7 +182,7 @@ export const toWorkflow = (
     }
 
     // Apply aggregation Filter after aggregation.
-    if (aggergated && aggergatedFilter.length > 0) {
+    if (aggergated && viewDimensions.length > 0 && aggergatedFilter.length > 0) {
         aggFilterWorkflow = {
             type: 'filter',
             filters: aggergatedFilter.map(createFilter),
