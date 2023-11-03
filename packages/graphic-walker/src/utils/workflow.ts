@@ -12,7 +12,7 @@ import type {
     IFilterField,
 } from '../interfaces';
 import type { VizSpecStore } from '../store/visualSpecStore';
-import { getMeaAggKey } from '.';
+import { getFilterMeaAggKey, getMeaAggKey } from '.';
 import { MEA_KEY_ID, MEA_VAL_ID } from '../constants';
 
 const walkExpression = (expression: IExpression, each: (field: string) => void): void => {
@@ -74,15 +74,17 @@ export const toWorkflow = (
     let computedWorkflow: IFilterWorkflowStep | null = null;
     let viewQueryWorkflow: IViewWorkflowStep | null = null;
     let sortWorkflow: ISortWorkflowStep | null = null;
+    let aggFilterWorkflow: IFilterWorkflowStep | null = null;
 
     // TODO: apply **fold** before filter
 
     const createFilter = (f: IFilterField): IVisFilter => {
-        viewKeys.add(f.fid);
+        const fid = getFilterMeaAggKey(f);
+        viewKeys.add(fid);
         const rule = f.rule!;
         if (rule.type === 'one of') {
             return {
-                fid: f.fid,
+                fid,
                 rule: {
                     type: 'one of',
                     value: [...rule.value],
@@ -91,7 +93,7 @@ export const toWorkflow = (
         } else if (rule.type === 'temporal range') {
             const range = [new Date(rule.value[0]).getTime(), new Date(rule.value[1]).getTime()] as const;
             return {
-                fid: f.fid,
+                fid,
                 rule: {
                     type: 'temporal range',
                     value: range,
@@ -100,7 +102,7 @@ export const toWorkflow = (
         } else {
             const range = [Number(rule.value[0]), Number(rule.value[1])] as const;
             return {
-                fid: f.fid,
+                fid,
                 rule: {
                     type: 'range',
                     value: range,
@@ -110,7 +112,7 @@ export const toWorkflow = (
     };
 
     // First, to apply filters on the detailed data
-    const filters = viewFilters.filter((f) => !f.computed && f.rule).map<IVisFilter>(createFilter);
+    const filters = viewFilters.filter((f) => !f.computed && f.rule && !f.enableAgg).map<IVisFilter>(createFilter);
     if (filters.length) {
         filterWorkflow = {
             type: 'filter',
@@ -136,7 +138,7 @@ export const toWorkflow = (
     }
 
     // Third, apply filter on the transformed data
-    const computedFilters = viewFilters.filter((f) => f.computed && f.rule).map<IVisFilter>(createFilter);
+    const computedFilters = viewFilters.filter((f) => f.computed && f.rule && !f.enableAgg).map<IVisFilter>(createFilter);
     if (computedFilters.length) {
         computedWorkflow = {
             type: 'filter',
@@ -148,7 +150,8 @@ export const toWorkflow = (
     // When aggregation is enabled, there're 2 cases:
     // 1. If any of the measures is aggregated, then we apply the aggregation
     // 2. If there's no measure in the view, then we apply the aggregation
-    const aggregateOn = viewMeasures.filter((f) => f.aggName).map((f) => [f.fid, f.aggName as string]);
+    const aggergatedFilter = viewFilters.filter((f) => f.enableAgg && f.aggName && f.rule);
+    const aggregateOn = viewMeasures.filter((f) => f.aggName).map((f) => [f.fid, f.aggName as string]).concat(aggergatedFilter.map(f => [f.fid, f.aggName as string]));
     const aggergated = defaultAggregated && (aggregateOn.length || (viewMeasures.length === 0 && viewDimensions.length > 0));
 
     if (aggergated) {
@@ -158,7 +161,7 @@ export const toWorkflow = (
                 {
                     op: 'aggregate',
                     groupBy: viewDimensions.map((f) => f.fid),
-                    measures: viewMeasures.map((f) => ({
+                    measures: viewMeasures.concat(aggergatedFilter).map((f) => ({
                         field: f.fid,
                         agg: f.aggName as any,
                         asFieldKey: getMeaAggKey(f.fid, f.aggName!),
@@ -178,6 +181,14 @@ export const toWorkflow = (
         };
     }
 
+    // Apply aggregation Filter after aggregation.
+    if (aggergated && aggergatedFilter.length > 0) {
+        aggFilterWorkflow = {
+            type: 'filter',
+            filters: aggergatedFilter.map(createFilter),
+        };
+    }
+
     if (sort !== 'none' && limit) {
         sortWorkflow = {
             type: 'sort',
@@ -186,7 +197,7 @@ export const toWorkflow = (
         };
     }
 
-    const steps: IDataQueryWorkflowStep[] = [filterWorkflow!, transformWorkflow!, computedWorkflow!, viewQueryWorkflow!, sortWorkflow!].filter(Boolean);
+    const steps: IDataQueryWorkflowStep[] = [filterWorkflow!, transformWorkflow!, computedWorkflow!, viewQueryWorkflow!, aggFilterWorkflow!, sortWorkflow!].filter(Boolean);
     return steps;
 };
 

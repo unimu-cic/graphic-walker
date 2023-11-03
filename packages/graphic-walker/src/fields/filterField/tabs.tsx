@@ -1,4 +1,3 @@
-import { observer } from 'mobx-react-lite';
 import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
@@ -7,12 +6,12 @@ import {
     ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 
-import type { IFilterField, IFilterRule, IFieldStats, IField, IViewField, IMutField, IComputationFunction } from '../../interfaces';
-import { useCompututaion, useVizStore } from '../../store';
+import type { IFilterField, IFilterRule, IFieldStats, IMutField, IComputationFunction } from '../../interfaces';
+import { useCompututaion } from '../../store';
 import LoadingLayer from '../../components/loadingLayer';
 import { fieldStat, getTemporalRange } from '../../computation';
 import Slider from './slider';
-import { parseCmpFunction } from '../../utils';
+import { getFilterMeaAggKey, parseCmpFunction } from '../../utils';
 
 export type RuleFormProps = {
     rawFields: IMutField[];
@@ -138,13 +137,13 @@ const countCmp = (a: FieldDistributionEntry, b: FieldDistributionEntry) => {
 };
 
 const useFieldStats = (
-    field: IField,
+    field: IFilterField,
     attributes: { values: boolean; range: boolean },
     sortBy: 'value' | 'value_dsc' | 'count' | 'count_dsc' | 'none',
     computation: IComputationFunction
 ): IFieldStats | null => {
     const { values, range } = attributes;
-    const { fid, cmp: cmpRaw } = field;
+    const { cmp: cmpRaw } = field;
     const cmp = parseCmpFunction(cmpRaw);
     const valueCmp = React.useCallback<typeof countCmp>(
         (a, b) => {
@@ -156,6 +155,8 @@ const useFieldStats = (
     const sortMulti = sortBy.endsWith('dsc') ? -1 : 1;
     const [loading, setLoading] = React.useState(true);
     const [stats, setStats] = React.useState<IFieldStats | null>(null);
+
+    const fieldStatKey = getFilterMeaAggKey(field);
 
     React.useEffect(() => {
         setLoading(true);
@@ -179,7 +180,7 @@ const useFieldStats = (
         return () => {
             isCancelled = true;
         };
-    }, [fid, computation, values, range]);
+    }, [fieldStatKey, computation, values, range]);
 
     const sortedStats = React.useMemo<typeof stats>(() => {
         if (!stats || !comparator) {
@@ -193,7 +194,7 @@ const useFieldStats = (
     return loading ? null : sortedStats;
 };
 
-export const FilterOneOfRule: React.FC<RuleFormProps & { active: boolean }> = observer(({ active, field, onChange }) => {
+export const FilterOneOfRule: React.FC<RuleFormProps & { active: boolean }> = ({ active, field, onChange }) => {
     interface SortConfig {
         key: 'value' | 'count';
         ascending: boolean;
@@ -337,7 +338,7 @@ export const FilterOneOfRule: React.FC<RuleFormProps & { active: boolean }> = ob
             </Table>
         </Container>
     ) : null;
-});
+};
 
 interface CalendarInputProps {
     min: number;
@@ -370,7 +371,7 @@ export const CalendarInput: React.FC<CalendarInputProps> = (props) => {
     );
 };
 
-export const FilterTemporalRangeRule: React.FC<RuleFormProps & { active: boolean }> = observer(({ active, field, onChange }) => {
+export const FilterTemporalRangeRule: React.FC<RuleFormProps & { active: boolean }> = ({ active, field, onChange }) => {
 
     const { t } = useTranslation('translation');
 
@@ -434,11 +435,11 @@ export const FilterTemporalRangeRule: React.FC<RuleFormProps & { active: boolean
             </CalendarInputContainer>
         </Container>
     ) : null;
-});
+};
 
 
 
-export const FilterRangeRule: React.FC<RuleFormProps & { active: boolean }> = observer(({ active, field, onChange }) => {
+export const FilterRangeRule: React.FC<RuleFormProps & { active: boolean }> = ({ active, field, onChange }) => {
     const { t } = useTranslation('translation', { keyPrefix: 'constant.filter_type' });
     const computation = useCompututaion();
 
@@ -476,7 +477,7 @@ export const FilterRangeRule: React.FC<RuleFormProps & { active: boolean }> = ob
             <Slider min={range[0]} max={range[1]} value={field.rule.value} onChange={handleChange} />
         </Container>
     ) : null;
-});
+};
 
 const filterTabs: Record<IFilterRule['type'], React.FC<RuleFormProps & { active: boolean }>> = {
     'one of': FilterOneOfRule,
@@ -503,10 +504,7 @@ export interface TabsProps extends RuleFormProps {
     tabs: IFilterRule['type'][];
 }
 
-const Tabs: React.FC<TabsProps> = observer(({ field, onChange, tabs }) => {
-    const vizStore = useVizStore();
-    const { meta } = vizStore;
-
+const Tabs: React.FC<TabsProps> = ({ rawFields, field, onChange, tabs }) => {
     const { t } = useTranslation('translation', { keyPrefix: 'constant.filter_type' });
 
     const [which, setWhich] = React.useState(field.rule?.type ?? tabs[0]!);
@@ -553,13 +551,13 @@ const Tabs: React.FC<TabsProps> = observer(({ field, onChange, tabs }) => {
                             hidden={which !== tab}
                             tabIndex={0}
                         >
-                            <Component field={field} onChange={onChange} active={which === tab} rawFields={meta} />
+                            <Component field={field} onChange={onChange} active={which === tab} rawFields={rawFields} />
                         </TabItem>
                     );
                 })}
             </TabPanel>
         </TabsContainer>
     );
-});
+};
 
 export default Tabs;

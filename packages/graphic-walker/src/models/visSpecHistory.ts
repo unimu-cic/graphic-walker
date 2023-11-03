@@ -52,6 +52,7 @@ export enum Methods {
     createDateDrillField,
     createDateFeatureField,
     changeSemanticType,
+    setFilterAggregator,
     upsertPaintField,
 }
 type PropsMap = {
@@ -74,6 +75,7 @@ type PropsMap = {
     [Methods.createDateDrillField]: [normalKeys, number, (typeof DATE_TIME_DRILL_LEVELS)[number], string, string, string | undefined];
     [Methods.createDateFeatureField]: [normalKeys, number, (typeof DATE_TIME_FEATURE_LEVELS)[number], string, string, string | undefined];
     [Methods.changeSemanticType]: [normalKeys, number, ISemanticType];
+    [Methods.setFilterAggregator]: [number, IAggregator | ''];
     [Methods.upsertPaintField]: [IPaintMap | null, string];
 };
 // ensure propsMap has all keys of methods
@@ -90,11 +92,13 @@ const actions: {
     [Methods.removeField]: (data, encoding, index) => mutPath(data, `encodings.${encoding}`, (fields) => remove(fields, index)) as IChart,
     [Methods.reorderField]: (data, encoding, from, to) =>
         mutPath(data, `encodings.${encoding}`, (fields) =>
-            algebraLint(fields.map((x, i, a) => {
-                if (i === from) return a[to];
-                if (i === to) return a[from];
-                return x;
-            }))
+            algebraLint(
+                fields.map((x, i, a) => {
+                    if (i === from) return a[to];
+                    if (i === to) return a[from];
+                    return x;
+                })
+            )
         ),
     [Methods.moveField]: (data, from, findex, to, tindex, limit) => {
         const oriField = data.encodings[from][findex];
@@ -104,18 +108,22 @@ const actions: {
                 : to === 'measures'
                 ? mutPath(oriField, 'analyticType', () => 'measure')
                 : oriField;
-        return mutPath(data, 'encodings', (e) => algebraLint({
-            ...e,
-            [from]: remove(data.encodings[from], findex),
-            [to]: insert(data.encodings[to], field, tindex).slice(0, limit ?? Infinity),
-        }));
+        return mutPath(data, 'encodings', (e) =>
+            algebraLint({
+                ...e,
+                [from]: remove(data.encodings[from], findex),
+                [to]: insert(data.encodings[to], field, tindex).slice(0, limit ?? Infinity),
+            })
+        );
     },
     [Methods.cloneField]: (data, from, findex, to, tindex, newVarKey, limit) => {
         const field = { ...data.encodings[from][findex], dragId: newVarKey };
-        return mutPath(data, 'encodings', (e) => algebraLint({
-            ...e,
-            [to]: insert(data.encodings[to], field, tindex).slice(0, limit ?? Infinity),
-        }));
+        return mutPath(data, 'encodings', (e) =>
+            algebraLint({
+                ...e,
+                [to]: insert(data.encodings[to], field, tindex).slice(0, limit ?? Infinity),
+            })
+        );
     },
     [Methods.createBinlogField]: (data, encoding, index, op, newVarKey, num) => {
         const originField = data.encodings[encoding][index];
@@ -188,11 +196,13 @@ const actions: {
         return data;
     },
     [Methods.transpose]: (data) =>
-        mutPath(data, 'encodings', (e) => algebraLint({
-            ...e,
-            columns: e.rows,
-            rows: e.columns,
-        })),
+        mutPath(data, 'encodings', (e) =>
+            algebraLint({
+                ...e,
+                columns: e.rows,
+                rows: e.columns,
+            })
+        ),
     [Methods.setLayout]: (data, kvs) => mutPath(data, 'layout', (l) => Object.assign({}, l, Object.fromEntries(kvs))),
     [Methods.setFieldAggregator]: (data, encoding, index, aggName) =>
         mutPath(data, `encodings.${encoding}`, (f) => replace(f, index, (x) => ({ ...x, aggName }))),
@@ -276,6 +286,9 @@ const actions: {
     },
     [Methods.changeSemanticType]: (data, channel, index, semanticType) => {
         return mutPath(data, `encodings.${channel}`, (f) => replace(f, index, (x) => ({ ...x, semanticType })));
+    },
+    [Methods.setFilterAggregator]: (data, index, aggName) => {
+        return mutPath(data, `encodings.filters`, (f) => replace(f, index, (x) => ({ ...x, aggName: aggName || 'sum', enableAgg: aggName ? true : false, rule: null })));
     },
     [Methods.upsertPaintField]: (data, map, name) => {
         if (!map) {
