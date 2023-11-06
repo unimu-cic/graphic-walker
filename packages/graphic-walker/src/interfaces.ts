@@ -790,6 +790,7 @@ export interface IVizProps {
         header?: Record<string, string>;
         features?: {
             askviz?: string | boolean;
+            feedbackAskviz?: string | boolean;
         };
     };
     geoList?: IGeoDataItem[];
@@ -835,6 +836,7 @@ export type IGWProps = IAppI18nProps &
 
 export interface ISpecProps {
     spec?: Specification;
+    vlSpec?: any;
 }
 
 export interface ITableSpecProps {
