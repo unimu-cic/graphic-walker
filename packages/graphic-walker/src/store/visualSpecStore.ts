@@ -95,6 +95,7 @@ export class VizSpecStore {
     localGeoJSON: FeatureCollection | undefined = undefined;
     showErrorResolutionPanel: number = 0;
     lastErrorMessage: string = "";
+    lastSpec: string = "";
 
     private onMetaChange?: (fid: string, diffMeta: Partial<IMutField>) => void;
 
@@ -591,6 +592,10 @@ export class VizSpecStore {
     updateShowErrorResolutionPanel(errCode: number, msg = "") {
         this.showErrorResolutionPanel = errCode;
         this.lastErrorMessage = msg;
+    }
+
+    updateLastSpec(spec: string) {
+        this.lastSpec = spec;
     }
 }
 

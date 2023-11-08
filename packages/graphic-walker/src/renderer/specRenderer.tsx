@@ -35,6 +35,7 @@ interface SpecRendererProps {
     locale?: string;
     themeConfig?: GWGlobalConfig;
     channelScales?: IChannelScales;
+    onReportSpec?: (spec: string) => void;
 }
 /**
  * Sans-store renderer of GraphicWalker.
@@ -52,7 +53,7 @@ const SpecRenderer = forwardRef<IReactVegaHandler, SpecRendererProps>(function (
         onGeomClick,
         onChartResize,
         locale,
-       
+        onReportSpec,
         themeConfig: customizedThemeConfig,
         channelScales,
      },
@@ -226,6 +227,7 @@ const SpecRenderer = forwardRef<IReactVegaHandler, SpecRendererProps>(function (
                     channelScales={channelScales}
                     dark={dark}
                     scale={scale}
+                    onReportSpec={onReportSpec}
                 />
             )}
         </Resizable>

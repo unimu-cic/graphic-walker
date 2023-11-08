@@ -129,7 +129,7 @@ const Renderer = forwardRef<IReactVegaHandler, RendererProps>(function (props, r
                     vizStore.setFilters(values);
                 });
                 const selectedMarkObject = values.vlPoint.or[0];
-                vizStore.updateSelectedMarkObject(selectedMarkObject);    
+                vizStore.updateSelectedMarkObject(selectedMarkObject);
             }
         },
         [vizStore]
@@ -183,6 +183,9 @@ const Renderer = forwardRef<IReactVegaHandler, RendererProps>(function (props, r
             onChartResize={handleChartResize}
             layout={layout}
             channelScales={props.channelScales}
+            onReportSpec={(spec) => {
+                vizStore.updateLastSpec(spec);
+            }}
         />
     );
 });
