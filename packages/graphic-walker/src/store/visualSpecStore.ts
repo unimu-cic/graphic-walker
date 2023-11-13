@@ -94,7 +94,7 @@ export class VizSpecStore {
     createField: ICreateField | undefined = undefined;
     localGeoJSON: FeatureCollection | undefined = undefined;
     showErrorResolutionPanel: number = 0;
-    lastErrorMessage: string = "";
+    lastErrorMessage: string = '';
 
     private onMetaChange?: (fid: string, diffMeta: Partial<IMutField>) => void;
 
@@ -350,7 +350,7 @@ export class VizSpecStore {
                 destinationKey,
                 destinationIndex,
                 uniqueId(),
-                limit,
+                limit
             );
         }
     }
@@ -401,7 +401,16 @@ export class VizSpecStore {
         name: string,
         format: string
     ) {
-        this.visList[this.visIndex] = performers.createDateDrillField(this.visList[this.visIndex], stateKey, index, drillLevel, uniqueId(), name, format);
+        this.visList[this.visIndex] = performers.createDateDrillField(
+            this.visList[this.visIndex],
+            stateKey,
+            index,
+            drillLevel,
+            uniqueId(),
+            name,
+            format,
+            new Date().getTimezoneOffset()
+        );
     }
 
     public createDateFeatureField(
@@ -411,7 +420,16 @@ export class VizSpecStore {
         name: string,
         format: string
     ) {
-        this.visList[this.visIndex] = performers.createDateFeatureField(this.visList[this.visIndex], stateKey, index, drillLevel, uniqueId(), name, format);
+        this.visList[this.visIndex] = performers.createDateFeatureField(
+            this.visList[this.visIndex],
+            stateKey,
+            index,
+            drillLevel,
+            uniqueId(),
+            name,
+            format,
+            new Date().getTimezoneOffset()
+        );
     }
 
     setFieldAggregator(stateKey: keyof Omit<DraggableFieldState, 'filters'>, index: number, aggName: IAggregator) {
@@ -592,7 +610,7 @@ export class VizSpecStore {
         this.selectedMarkObject = newMarkObj;
     }
 
-    updateShowErrorResolutionPanel(errCode: number, msg = "") {
+    updateShowErrorResolutionPanel(errCode: number, msg = '') {
         this.showErrorResolutionPanel = errCode;
         this.lastErrorMessage = msg;
     }
